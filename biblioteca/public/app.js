@@ -14,10 +14,40 @@ async function carregarLivros() {
         for(const livro of livros){
             const item = document.createElement('li');
             const status = livro.lido ? 'lido' : 'Não lido';
-
+            
             item.textContent = 
-                `${livro.titulo} - ${livro.autor} (${status})`;
+            `${livro.titulo} - ${livro.autor} (${status})`;
             lista.appendChild(item);
+
+            if (!livro.lido){
+                const botaoLido = document.createElement('button');
+                botaoLido.type = 'button';
+                botaoLido.textContent = 'Marcar como lido';
+            
+                botaoLido.addEventListener('click', async()=>{
+                    botaoLido.disabled = true;
+            
+                try{
+                    const resposta = await fetch(
+                        `/api/livros/${livro.id}/lido`,
+                        {method: 'PATCH' }
+                    );
+                    const dados = await resposta.json();
+            
+                    if(!resposta.ok){
+                        throw new Error(
+                            dados.erro || "Não foi possível atualizar o livro."
+                        );
+                    }
+                    await carregarLivros();
+                }catch(erro){
+                    mensagem.textContent = erro.message;
+                }finally{
+                    botaoLido.disabled = false
+                }
+                });
+                item.appendChild(botaoLido);
+            }
         }
         mensagem.textContent = livros.length === 0
             ?'Você ainda não cadastrou livros.'

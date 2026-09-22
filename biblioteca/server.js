@@ -64,3 +64,28 @@ app.post('/api/livros', async(req, res) =>{
 app.listen(process.env.PORT || 3000, () => {
     console.log('Servidor disponível em http://localhost:3000');
 });
+
+app.patch('/api/livros/:id/lido', async(req, res) =>{
+    const id =Number(req.params.id);
+    if(!Number.isInteger(id) || id<1 || id>2147483647){
+        return res.status(400).json({
+            erro:'ID inválido.'
+        });
+    }
+    try {
+        const resultado = await pool.query(
+            'UPDATE livros SET lido = TRUE WHERE id = $1 RETURNING *',
+            [id]
+        );
+        if (resultado.rowCount === 0){
+            return res.status(404).json({
+                erro: 'Livro não encontrado.'
+            });
+        }
+        res.json(resultado.rows[0]);
+    } catch(erro){
+        res.status(500).json({
+            erro: 'Não foi possivel atualizar o livro'
+        });
+    }
+});
