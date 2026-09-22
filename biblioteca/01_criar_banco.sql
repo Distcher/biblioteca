@@ -3,7 +3,8 @@ CREATE TABLE livros(
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     titulo VARCHAR(200) NOT NULL,
     autor VARCHAR(150) NOT NULL,
-    ano_publicação INTEGER,
+    ano_publicacao INTEGER,
     lido BOOLEAN NOT NULL DEFAULT FALSE
 );
 SELECT current_database(), CURRENT_SCHEMA();
+
