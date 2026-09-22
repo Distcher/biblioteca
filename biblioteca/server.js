@@ -11,17 +11,30 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/livros', async(requestAnimationFrame, res) =>{
+    const ordenacoes = new Map([
+        ['recentes', 'id DESC'],
+        ['antigos', 'id ASC'],
+        ['titulo', 'LOWER(titulo) ASC, id ASC'],
+        ['autor', 'LOWER(autor) ASC, LOWER(titulo) ASC, id ASC'],
+        ['publicacao_recente', 'ano_publicacao ASC NULLS LAST, id DESC'],
+        ['publicacao_antiga','ano_publicacao ASC NULLS LAST, id ASC'],
+    ]);
+    const ordem = ordenacoes.get(req.query.ordem)
+        ?? ordenacoes.get('recentes');
+    
     try{
         const resultado = await pool.query(
-            'SELECT * FROM livros ORDER BY id'
+            `SELECT * FROM livros ORDER BY ${ordem}`
         );
-        res.json(resultado.rows);
-    }catch(erro){
+
+    res.json(resultado.rows);
+    } catch(erro){
         console.error(erro);
         res.status(500).json({
-            erro: 'Não foi possível consultar os livros.'
+            erro:'Não foi possivel consultar os livros.'
         });
     }
+
 });
 app.post('/api/livros', async(req, res) =>{
     const {titulo, autor, ano_publicacao} = req.body ?? {};

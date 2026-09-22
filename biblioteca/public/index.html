@@ -23,6 +23,15 @@
                 type ="number" min = "1" max ="9999">
             <button type ="submit">Cadastrar o livro</button>
         </form>
+        <label for="ordenacao">Ordernar por:</label>
+        <select id="ordenacao">
+            <option value="recentes">Adicionados recentemente</option>
+            <option value="antigos">Adicionados primeiro</option>
+            <option value="titulo">Titulos A-Z</option>
+            <option value="autor">Autor A-Z</option>
+            <option value="publicacao_antiga">Publicação: mais antiga</option>
+            <option value="publicacao_recente">Publicação mais recente</option>
+        </select>
         <ul id = "lista-livros"></ul>
     </body>
 </html>

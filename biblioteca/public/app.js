@@ -1,9 +1,13 @@
 const lista = document.querySelector('#lista-livros');
 const mensagem = document.querySelector('#mensagem');
+const ordenacao = document.querySelector('#ordenacao')
 
 async function carregarLivros() {
     try{
-        const resposta = await fetch('/api/livros');
+        const parametros = new URLSearchParams({
+            ordem: ordenacao.value
+        });
+        const resposta = await fetch(`/api/livros?${parametros}`);
 
         if (!resposta.ok){
             throw new Error ('Não foi possivel carregar os livros.');
@@ -58,6 +62,7 @@ async function carregarLivros() {
     }
     
 }
+ordenacao.addEventListener('change', carregarLivros);
 carregarLivros();
 const formulario = document.querySelector('#form-livro');
 const botaodeCadastrar =
