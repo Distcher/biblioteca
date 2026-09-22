@@ -10,6 +10,18 @@
     <body>
         <h1>Minha biblioteca</h1>
         <p id="mensagem">Carregando livros ...</p>
+        <form id = "form-livro">
+            <label for ="titulo">Titulo</label>
+            <input id = "tiutlo" name="titulo" maxlength="200" required>
+            
+            <label for="autor">Autor</label>
+            <input id ="autor" name="autor" maxlength="150" required>
+            
+            <label for = "ano">Ano de publicação</label>
+            <input id="ano" name = "ano_publicacao"
+                type ="number" min = "1" max ="9999">
+            <button type ="submit">Cadastrar o livro</button>
+        </form>
         <ul id = "lista-livros"></ul>
     </body>
 </html>
