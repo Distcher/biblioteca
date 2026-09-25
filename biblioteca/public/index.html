@@ -1,37 +1,83 @@
-<!DOCTYPE html>
-<html lang = "pt-BR">
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
-        <meta name = "viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Minha biblioteca</title>
-        <link rel = "stylesheet" href ="style.css">
-        <script src="app.js" defer ></script>
+        <link rel="stylesheet" href="style.css">
+        <script src="app.js" defer></script>
     </head>
     <body>
-        <h1>Minha biblioteca</h1>
-        <p>Todos os livros que virem a ser adicionados, virão como não lidos.</p>
-        <p id="mensagem">Carregando livros ...</p>
-        <form id = "form-livro">
-            <label for ="titulo">Titulo</label>
-            <input id = "titulo" name="titulo" maxlength="200" required>
-            
-            <label for="autor">Autor</label>
-            <input id ="autor" name="autor" maxlength="150" required>
-            
-            <label for = "ano">Ano de publicação</label>
-            <input id="ano" name = "ano_publicacao"
-                type ="number" min = "1" max ="9999">
-            <button type ="submit">Cadastrar o livro</button>
-        </form>
-        <label for="ordenacao">Ordernar por:</label>
-        <select id="ordenacao">
-            <option value="recentes">Adicionados recentemente</option>
-            <option value="antigos">Adicionados primeiro</option>
-            <option value="titulo">Titulos A-Z</option>
-            <option value="autor">Autor A-Z</option>
-            <option value="publicacao_antiga">Publicação: mais antiga</option>
-            <option value="publicacao_recente">Publicação mais recente</option>
-        </select>
-        <ul id = "lista-livros"></ul>
+        <dialog id ="detalhes-livro" aria-labelledby="detalhes-titulo">
+            <form method="dialog" class="fechar-detalhes">
+                <button type="submit" aria-label="fechar detalhes">fechar</button>
+            </form>
+            <h2 Id="detalhes-titulo"></h2>
+            <dl class="dados-livro">
+                <dt>Autor</dt>
+                <dd id="detalhes-autor"></dd>
+    
+                <dt>Ano de publicação</dt>
+                <dd id="detalhes-ano"></dd>
+    
+                <dt>Status</dt>
+                <dd id="detalhes-status"></dd>
+            </dl>
+        </dialog>
+        <main class="biblioteca">
+            <header class="cabecalho">
+                <p class="subtitulo">SUAS HISTÓRIAS, SEU ESPAÇO</p>
+                <h1>Minha biblioteca</h1>
+                <p>Uma coleção de historias que fazem parte de você.</p>
+            </header>
+
+            <section class="painel" aria-labelledby="titulo-cadastro">
+                <h2 id="titulo-cadastro">Adicionar um Livro</h2>
+
+                <form id="form-livro" class="form-livro">
+                    
+                    <div class="campo">
+                        <label for="titulo">Título</label>
+                        <input id="titulo" name="titulo" maxlength="200" required>
+                    </div>
+
+                    <div class="campo">
+                        <label for="autor">Autor</label>
+                        <input id="autor" name="autor" maxlength="150" required>
+                    </div>
+
+                    <div class="campo">
+                        <label for="ano">Ano de publicação</label>
+                        <input id="ano" name="ano_publicacao"
+                               type="number" min="1" max="9999">
+                    </div>
+                    <div class="campo">
+                        <label for="cor">Cor da capa</label>
+                        <input type="color" name="cor" id="cor" value="#765044">
+                    </div>
+                    <button type="submit">Adicionar à coleção</button>
+                </form>
+            </section>
+
+            <section aria-labelledby="titulo-estante">
+                <div class="barra-estante">
+                    <h2 id="titulo-estante">Sua estante</h2>
+                    <p id="mensagem" role="status">Carregando livros</p>
+                    <div class="campo">
+                        <label for="ordenacao">Ordenado por</label>
+                        <select id="ordenacao">
+                            <option value="recentes">Adicionados recentemente</option>
+                            <option value="antigos">Adicionados primeiro</option>
+                            <option value="titulo">Título: A-Z</option>
+                            <option value="autor">Autor: A-Z</option>
+                            <option value="publicacao_recente">Publicação: mais recente</option>
+                            <option value="publicacao_antiga">Publicação: mais antiga</option>
+                        </select>
+                    </div>
+                </div>
+
+                <ul id="lista-livros" class="estante"></ul>
+            </section>
+        </main>
     </body>
 </html>
