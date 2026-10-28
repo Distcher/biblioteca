@@ -6,6 +6,15 @@ const detalhesTitulo = document.querySelector('#detalhes-titulo')
 const detalhesAutor = document.querySelector('#detalhes-autor')
 const detalhesAno = document.querySelector('#detalhes-ano')
 const detalhesStatus = document.querySelector('#detalhes-status');
+const campoAno = document.querySelector('#ano');
+
+for(let ano = 2026; ano >=1; ano--){
+    const opcao = document.createElement('option');
+    opcao.value = String(ano);
+    opcao.textContent = String(ano);
+
+    campoAno.appendChild(opcao);
+}
 
 function abrirDetalhes(livro){
     detalhesTitulo.textContent = livro.titulo;
@@ -86,6 +95,28 @@ async function carregarLivros() {
             status.textContent = livro.lido ? 'lido' : 'Quero ler';
 
             capa.append(titulo, autor, status);
+            if (livro.capa_url){
+                const imagem = document.createElement('img');
+                imagem.className = 'imagem-capa';
+                imagem.alt = '';
+                imagem.loading = 'lazy'
+
+                imagem.addEventListener('load', ()=>{
+                    titulo.hidden = true;
+                    autor.hidden = true;
+                    status.hidden = true;
+                    capa.classList.add('com-imagem');
+                });
+                imagem.addEventListener('error', ()=>{
+                    imagem.remove();
+                    titulo.hidden = false;
+                    status.hidden = false;
+                    autor.hidden = false;
+                    capa.classList.remove('com-imagem');
+                });
+                imagem.src = livro.capa_url;
+                capa.prepend(imagem);
+            }
 
             const acoes = document.createElement('div');
             acoes.className = 'livro-acoes';
@@ -179,7 +210,8 @@ formulario.addEventListener('submit', async(evento) =>{
         titulo: document.querySelector('#titulo').value,
         autor: document.querySelector('#autor').value,
         ano_publicacao:document.querySelector('#ano').value,
-        cor: document.querySelector('#cor').value
+        cor: document.querySelector('#cor').value,
+        capa_url: document.querySelector('#capa-url').value || null
     };
     try{
         const resposta = await fetch('/api/livros',{
@@ -202,3 +234,88 @@ formulario.addEventListener('submit', async(evento) =>{
         botaodeCadastrar.disabled = false
     }
 })
+const buscarTitulo = document.querySelector('#busca-titulo');
+const botaoBuscar = document.querySelector('#buscar-catalogo');
+const mensagemCatalogo = document.querySelector('#mensagem-catalogo');
+const resultadosCatalogo = document.querySelector('#resultados-catalogo');
+const previaCapa = document.querySelector('#previa-capa');
+const campoCapaUrl = document.querySelector('#capa-url')
+
+function limparPreviaCapa(){
+    campoCapaUrl.value = '';
+    previaCapa.hidden = true;
+    previaCapa.removeAttribute('src');
+}
+formulario.addEventListener('reset', limparPreviaCapa);
+
+previaCapa.addEventListener('error', ()=>{
+    limparPreviaCapa();
+    mensagemCatalogo.textContent =
+    'A imagem não está disponível. Você pode cadastrar sem ela.';
+});
+botaoBuscar.addEventListener('click', async()=>{
+    const titulo = buscarTitulo.value.trim();
+    if (titulo.length <2 || titulo.length > 200){
+        mensagemCatalogo.textContent = 'Digite um título entre 2 a 200 caracteres.';
+        return;
+    }
+    botaoBuscar.disabled = true;
+    resultadosCatalogo.replaceChildren();
+    mensagemCatalogo.textContent = 'Buscando...';
+    try{
+        const parametros = new URLSearchParams({ titulo});
+        const resposta = await fetch(`/api/catalogo?${parametros}`);
+        const dados = await resposta.json();
+
+        if(!resposta.ok){
+            throw new Error(dados.erro || 'Erro ao buscar no catalogo.');
+        }
+        if (!Array.isArray(dados)){
+            throw new Error('Resposta inesperada do catalogo.');
+        }
+        mensagemCatalogo.textContent = dados.length
+        ? 'Selecione um livro abaixo.'
+        : 'Nenhum resultado encontrado. tente outro Título.';
+
+        for (const livro of dados){
+            const item = document.createElement('li');
+            const descricao = document.createElement('p');
+            const selecionar = document.createElement('button');
+            descricao.textContent = `${livro.titulo}-${livro.autor|| 'Autor não informado'}`+
+            ` - ${livro.ano_publicacao ?? ' Ano não informado'}`+ (livro.capa_url ? '':' - Sem capa');
+            selecionar.type = 'button';
+            selecionar.textContent = 'Usar este livro';
+
+            selecionar.addEventListener('click', ()=>{
+                document.querySelector('#titulo').value = livro.titulo;
+                document.querySelector('#autor').value = livro.autor;
+                const ano = Number(livro.ano_publicacao);
+                if (Number.isInteger(ano) && ano >=1 && ano<=9999){
+                    const valor = String(ano);
+                    const existe = Array.from(campoAno.options).some(opcao => opcao.value === valor);
+                    if (!existe){
+                        campoAno.add(new Option(valor, valor));
+                    }
+                    campoAno.value = valor;
+                }
+                else{
+                    campoAno.value = '';
+                }
+                limparPreviaCapa();
+                if (livro.capa_url){
+                    campoCapaUrl.value = livro.capa_url;
+                    previaCapa.src = livro.capa_url;
+                    previaCapa.hidden = false;
+                }
+                mensagemCatalogo.textContent = 'Confira os dados e a prévi antes de cadastrar.';
+
+            });
+            item.append(descricao, selecionar);
+            resultadosCatalogo.appendChild(item);
+        }
+    }catch(erro){
+            mensagemCatalogo.textContent = erro.message;
+        }finally{
+            botaoBuscar.disabled = false;
+        }
+});

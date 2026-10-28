@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const {Pool} = require('pg');
 const path = require('path');
+const { registrarErro } = require('./logger');
 
 const app = express();
 const pool = new Pool();
@@ -28,15 +29,78 @@ app.get('/api/livros', async(req, res) =>{
 
     res.json(resultado.rows);
     } catch(erro){
-        console.error(erro);
+        registrarErro(erro, { operacao: 'Consultar livros', metodo: req.method, rota: req.path });
         res.status(500).json({
             erro:'Não foi possivel consultar os livros.'
         });
     }
 
 });
+app.get('/api/catalogo', async(req,res)=> { 
+    const titulo = typeof
+req.query.titulo ==='string'
+        ? req.query.titulo.trim()
+        :'';
+
+    if(titulo.length < 2 || titulo.length > 200){
+        return res.status(400).json({
+            erro: 'informe um titulo entre 2 e 200 caracteres.'
+        });
+    }
+    const parametros = new URLSearchParams({
+        title:titulo,
+        fields:'key,title,author_name,first_publish_year,cover_i', limit:'8', lang:'pt'
+    });
+    try{
+        const resposta = await fetch(
+            `https://openlibrary.org/search.json?${parametros}`, {
+                headers:{
+                    Accept: 'application/json'
+                },
+                signal:AbortSignal.timeout(10000)
+            }
+        );
+        if(!resposta.ok){
+            throw new Error(
+                `O catálogo respondeu com status ${resposta.status}.`
+            );
+        }
+        const dados = await resposta.json();
+        if(!Array.isArray(dados.docs)){
+            throw new Error('Resposta inesperada do catálogo.');
+        }
+        const resultado = dados.docs.map((livro)=>({
+            origem:'openlibrary',
+            id_externo: livro.key,
+            titulo:livro.title??'',
+            autor: Array.isArray(livro.author_name)
+            ? livro.author_name.join(', ')
+            : '',
+            ano_publicacao:livro.first_publish_year ?? null,
+            capa_url: livro.cover_i
+            ?
+            `https://covers.openlibrary.org/b/id/${livro.cover_i}-M.jpg?default=false`
+            : null
+        }));
+        res.json(resultado);
+    } catch(erro){
+        console.error('Erro na busca do catálogo:', erro.message);
+        const expirou = erro.name === 'TimeoutError';
+        res.status(expirou? 504: 502).json({
+            erro: expirou
+            ?'O catalogo demorou para responder. Tente novamente.'
+            :'Não foi possivel consultar o catálogo agora.'
+        });
+    }
+});
 app.post('/api/livros', async(req, res) =>{
-    const {titulo, autor, ano_publicacao, cor} = req.body ?? {};
+    const{
+        titulo,
+        autor,
+        ano_publicacao,
+        cor,
+        capa_url
+    } = req.body ?? {};
     if(
         typeof titulo !== 'string' || 
         typeof autor !== 'string' ||
@@ -55,6 +119,16 @@ app.post('/api/livros', async(req, res) =>{
         erro:'Escolha uma cor válida para a capa'
     });
 }
+const capaUrl= capa_url === '' || capa_url == null
+    ? null
+    : capa_url;
+    if (capaUrl !== null &&(
+        typeof capaUrl !== 'string' || !/^https:\/\/covers\.openlibrary\.org\/b\/id\/[0-9]+-M\.jpg\?default=false$/.test(capaUrl)
+    )){
+        return res.status(400).json({
+            erro: 'O endereço da capa é invalido.'
+        });
+    }
     const ano = ano_publicacao === '' || ano_publicacao == null
         ? null
         : Number(ano_publicacao);
@@ -67,14 +141,14 @@ app.post('/api/livros', async(req, res) =>{
     }
     try{
         const resultado = await pool.query(
-            `INSERT INTO livros (titulo, autor, ano_publicacao, cor)
-            VALUES ($1, $2, $3, $4)
+            `INSERT INTO livros (titulo, autor, ano_publicacao, cor, capa_url)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING *`,
-            [titulo.trim(), autor.trim(), ano, cor]
+            [titulo.trim(), autor.trim(), ano, cor, capaUrl]
         );
         res.status(201).json(resultado.rows[0]);
     }catch(erro){
-        console.error(erro);
+        registrarErro(erro, { operacao: 'Cadastrar livro', metodo: req.method, rota: req.path });
         res.status(500).json({
             erro: "Não foi possivel cadastrar o livro."
         });
@@ -100,7 +174,7 @@ app.delete('/api/livros/:id', async(req,res) => {
         }
         res.json({mensagem: 'Livro Excluido.'});
     }catch(erro){
-        console.error(erro);
+        registrarErro(erro, { operacao: 'Excluir livro', metodo: req.method, rota: req.path });
         res.status(500).json({
             erro: 'Não foi possível excluir o livro.'
         });
@@ -129,7 +203,7 @@ app.patch('/api/livros/:id/lido', async(req, res) =>{
         }
         res.json(resultado.rows[0]);
     } catch(erro){
-        console.error(erro);
+        registrarErro(erro, { operacao: 'Marcar livro como lido', metodo: req.method, rota: req.path });
 
         res.status(500).json({
             erro: 'Não foi possivel atualizar o livro'

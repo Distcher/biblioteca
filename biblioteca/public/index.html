@@ -33,7 +33,17 @@
 
             <section class="painel" aria-labelledby="titulo-cadastro">
                 <h2 id="titulo-cadastro">Adicionar um Livro</h2>
-
+                <div class = "busca-catalogo">
+                    <label for="busca-titulo">Buscar livro no catálogo</label>
+                    <input id= "busca-titulo" type="search"
+                    placeholder="Ex.: Dom Casmurro"
+                    minlength="2" maxlength="200">
+                    <button type="button" id="buscar-catalogo">
+                        Buscar no catálogo
+                    </button>
+                    <p id="mensagem-catalogo" role="status"></p>
+                    <ul id="resultados-catalogo"></ul>
+                </div>
                 <form id="form-livro" class="form-livro">
                     
                     <div class="campo">
@@ -48,12 +58,22 @@
 
                     <div class="campo">
                         <label for="ano">Ano de publicação</label>
-                        <input id="ano" name="ano_publicacao"
-                               type="number" min="1" max="9999">
+                        <select name="ano_publicacao" id="ano"><option value="">Não informado
+
+                        </option>
+                    </select>
                     </div>
                     <div class="campo">
                         <label for="cor">Cor da capa</label>
                         <input type="color" name="cor" id="cor" value="#765044">
+                    </div>
+                    <div class="campo">
+                        <span>Capa encontrada</span>
+                        <img id="previa-capa"
+                        alt="Prévia da capa selecionada"
+                        width="100"
+                        hidden>
+                        <input type="hidden" id="capa-url" name="capa-url">
                     </div>
                     <button type="submit">Adicionar à coleção</button>
                 </form>
